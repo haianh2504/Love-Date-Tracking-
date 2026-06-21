@@ -1,0 +1,6 @@
+{
+  "name": "Wedding Anniversary Website",
+  "description": "A beautiful, elegant single-page website for celebrating a wedding anniversary and preserving precious memories together.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
