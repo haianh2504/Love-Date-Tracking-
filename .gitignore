@@ -1,8 +1,15 @@
+# Node modules and build output
 node_modules/
 build/
 dist/
 coverage/
+
+# macOS files
 .DS_Store
+
+# Logs
 *.log
+
+# Environment files: keep secrets local and out of git
 .env*
 !.env.example
