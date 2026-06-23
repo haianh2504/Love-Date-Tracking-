@@ -16,12 +16,24 @@ import Gallery from './components/Gallery';
 import MyThoughtsForYou from './components/MyThoughtsForYou';
 import Footer from './components/Footer';
 
+// Import Firebase Authentication functions
+import { signInWithPopup, signOut } from "firebase/auth";
+import { getFirebaseAuth, googleProvider } from "./firebase";
+
+const ALLOWED_EMAILS = [
+  "haianh2504077@gmail.com",
+  "vungocanhthu1192009@gmail.com" 
+];
+
+
+// ranh giới
 export default function App() {
   const [profile, setProfile] = useState<CoupleProfile>(INITIAL_PROFILE);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Khôi phục hồ sơ lưu niệm từ localStorage
   useEffect(() => {
@@ -88,6 +100,36 @@ export default function App() {
     setShowMobileMenu(false);
   };
 
+  // xử lý đăng nhập Google với Firebase Authentication
+  const handleGoogleLogin = async () => {
+    try {
+      // Mở cửa sổ popup chọn tài khoản Google
+      const auth = getFirebaseAuth();
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const userEmail = user.email?.toLowerCase();
+
+      // Backend Logic: Kiểm tra phân quyền
+      if (userEmail && ALLOWED_EMAILS.includes(userEmail)) {
+        console.log("Xác thực thành công. Xin chào:", user.displayName);
+        alert(`Chào mừng ${user.displayName} đã quay trở lại không gian của chúng mình!`);
+        // Đánh dấu là đã đăng nhập để hiển thị các nút chỉnh sửa
+        setIsLoggedIn(true);
+        
+      } else {
+        // Nếu email không được phép, đăng xuất và thông báo
+        await signOut(auth);
+        setIsLoggedIn(false);
+        alert("Khu vực riêng tư! Bạn không có quyền truy cập.");
+      }
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("Tiến trình đăng nhập bị hủy.");
+      } else {
+        console.error("Lỗi xác thực Firebase:", error);
+      }
+    }
+  };
   return (
     <div className="min-h-screen bg-brand-base text-brand-dark overflow-hidden relative">
 
@@ -149,6 +191,14 @@ export default function App() {
             <button onClick={() => scrollToSection('thoughts')} className="hover:text-brand-deep cursor-pointer transition-colors">Lời thương gửi em</button>
           </div>
 
+          {/* Nút login */}
+          <button
+            onClick={handleGoogleLogin}
+            className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-white text-amber-900 border border-pink-200 shadow-sm hover:bg-brand-deep hover:text-white hover:border-brand-deep transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
+          >
+            Login
+          </button>
+
           {/* Biểu tượng thực đơn nhỏ cho Mobile */}
           <div className="flex items-center">
             <button
@@ -182,16 +232,16 @@ export default function App() {
       <main>
         
         {/* 1. Phần mở màn đại diện Hero */}
-        <Hero profile={profile} onUpdateProfile={handleUpdateProfile} />
+        <Hero profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
 
         {/* 2. Phần tự động đếm ngày bên nhau */}
         <DaysTogetherCounter startDateStr={profile.weddingDate} />
 
         {/* 3. Cuốn lưu bút hình ảnh kỷ niệm */}
-        <Gallery />
+        <Gallery isLoggedIn={isLoggedIn} />
 
         {/* 4. Lá thư gửi thương yêu riêng tư đầy xúc cảm */}
-        <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} />
+        <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
 
       </main>
 

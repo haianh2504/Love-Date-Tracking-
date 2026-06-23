@@ -6,9 +6,10 @@ import { CoupleProfile } from '../types';
 interface HeroProps {
   profile: CoupleProfile;
   onUpdateProfile: (newProfile: CoupleProfile) => void;
+  isLoggedIn?: boolean;
 }
 
-export default function Hero({ profile, onUpdateProfile }: HeroProps) {
+export default function Hero({ profile, onUpdateProfile, isLoggedIn }: HeroProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<CoupleProfile>(profile);
   const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; scale: number; duration: number }[]>([]);
@@ -144,14 +145,16 @@ export default function Hero({ profile, onUpdateProfile }: HeroProps) {
           transition={{ delay: 1.6, duration: 1 }}
           className="mt-12 flex justify-center gap-4"
         >
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 text-xs rounded-full bg-brand-pastel/30 hover:bg-brand-pastel/60 text-brand-dark/80 transition-all border border-brand-pastel/40 cursor-pointer shadow-xs font-medium"
-            id="btn-edit-profile"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-brand-deep" />
-            <span>Tùy Chỉnh Sự Kiện</span>
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 text-xs rounded-full bg-brand-pastel/30 hover:bg-brand-pastel/60 text-brand-dark/80 transition-all border border-brand-pastel/40 cursor-pointer shadow-xs font-medium"
+              id="btn-edit-profile"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-brand-deep" />
+              <span>Tùy Chỉnh Sự Kiện</span>
+            </button>
+          )}
 
           <a
             href="#countdown"

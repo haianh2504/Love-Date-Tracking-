@@ -3,7 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ZoomIn, X, Plus, Trash2, MapPin, Calendar, Camera } from 'lucide-react';
 import { GalleryPhoto } from '../types';
 
-export default function Gallery() {
+interface GalleryProps {
+  isLoggedIn?: boolean;
+}
+
+export default function Gallery({ isLoggedIn }: GalleryProps) {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
@@ -124,14 +128,16 @@ export default function Gallery() {
 
           {/* Khung chức năng thêm ảnh / khôi phục */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsAdding(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-deep/10 hover:bg-brand-deep/20 text-brand-dark rounded-full text-xs font-semibold cursor-pointer transition-all border border-brand-pastel/40"
-              id="btn-add-photo-scrapbook"
-            >
-              <Plus className="w-3.5 h-3.5 text-brand-deep" />
-              <span>Thêm Kỷ Niệm Mới</span>
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => setIsAdding(true)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-brand-deep/10 hover:bg-brand-deep/20 text-brand-dark rounded-full text-xs font-semibold cursor-pointer transition-all border border-brand-pastel/40"
+                id="btn-add-photo-scrapbook"
+              >
+                <Plus className="w-3.5 h-3.5 text-brand-deep" />
+                <span>Thêm Kỷ Niệm Mới</span>
+              </button>
+            )}
 
           </div>
 
@@ -179,13 +185,15 @@ export default function Gallery() {
                     </span>
 
                     {/* Nút hủy bỏ tấm ảnh kỷ niệm góc trên trái */}
-                    <button
-                      onClick={(e) => handleDeletePhoto(photo.id, e)}
-                      className="absolute top-4 left-4 z-20 bg-red-5/90 hover:bg-red-500 hover:text-white backdrop-blur-md p-2 rounded-full text-red-500 shadow-xs opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95"
-                      title="Xóa kỷ niệm này"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isLoggedIn && (
+                      <button
+                        onClick={(e) => handleDeletePhoto(photo.id, e)}
+                        className="absolute top-4 left-4 z-20 bg-red-5/90 hover:bg-red-500 hover:text-white backdrop-blur-md p-2 rounded-full text-red-500 shadow-xs opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95"
+                        title="Xóa kỷ niệm này"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
 
                     {/* Thẻ ghi chú nhãn danh mục lửng lơ ẩn trên mobile cho đỡ rối */}
                     <div className="absolute top-4 right-14 z-20 px-2.5 py-0.5 bg-brand-base/85 backdrop-blur-md text-[9px] font-bold text-brand-deep uppercase tracking-widest rounded-md border border-brand-pastel/50 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 hidden md:block">

@@ -6,9 +6,10 @@ import { CoupleProfile } from '../types';
 interface MyThoughtsForYouProps {
   profile: CoupleProfile;
   onUpdateProfile: (newProfile: CoupleProfile) => void;
+  isLoggedIn?: boolean;
 }
 
-export default function MyThoughtsForYou({ profile, onUpdateProfile }: MyThoughtsForYouProps) {
+export default function MyThoughtsForYou({ profile, onUpdateProfile, isLoggedIn }: MyThoughtsForYouProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedLetter, setEditedLetter] = useState(profile.letterText || '');
 
@@ -116,26 +117,31 @@ Quang Huy`;
 
           {/* Thanh chức năng bên dưới */}
           <div className="mt-12 pt-6 border-t border-brand-pastel/20 flex items-center justify-between gap-4">
-            
-            <button
-              onClick={() => {
-                setEditedLetter(profile.letterText || '');
-                setIsEditing(true);
-              }}
-              className="flex items-center gap-1.5 px-4.5 py-2 text-xs rounded-full bg-brand-pastel/30 hover:bg-brand-pastel/50 text-brand-dark/90 transition-all border border-brand-pastel/40 cursor-pointer shadow-xs font-semibold"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-brand-deep" />
-              <span>Chỉnh Sửa Lời Thư</span>
-            </button>
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={() => {
+                    setEditedLetter(profile.letterText || '');
+                    setIsEditing(true);
+                  }}
+                  className="flex items-center gap-1.5 px-4.5 py-2 text-xs rounded-full bg-brand-pastel/30 hover:bg-brand-pastel/50 text-brand-dark/90 transition-all border border-brand-pastel/40 cursor-pointer shadow-xs font-semibold"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-brand-deep" />
+                  <span>Chỉnh Sửa Lời Thư</span>
+                </button>
 
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-brand-dark transition-all cursor-pointer hover:underline"
-              title="Khôi phục thư tình ngọt ngào nguyên bản"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span>Thư Mặc Định</span>
-            </button>
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-brand-dark transition-all cursor-pointer hover:underline"
+                  title="Khôi phục thư tình ngọt ngào nguyên bản"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Thư Mặc Định</span>
+                </button>
+              </>
+            ) : (
+              <div />
+            )}
 
           </div>
 

@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -43,3 +44,13 @@ export const analytics =
   typeof window !== "undefined" && typeof navigator !== "undefined"
     ? getAnalytics(app)
     : undefined;
+
+// Lazily initialize Firebase Authentication only in browser runtime
+export const getFirebaseAuth = () => {
+  if (typeof window === "undefined") {
+    throw new Error("Firebase Auth can only be initialized in the browser.");
+  }
+  return getAuth(app);
+};
+
+export const googleProvider = new GoogleAuthProvider();
