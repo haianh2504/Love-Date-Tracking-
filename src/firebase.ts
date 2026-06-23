@@ -36,4 +36,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-export const analytics = getAnalytics(app);
+
+// Only initialize Analytics in a browser-like environment.
+// This avoids errors in SSR or build-time tooling that may not have `window`.
+export const analytics =
+  typeof window !== "undefined" && typeof navigator !== "undefined"
+    ? getAnalytics(app)
+    : undefined;
