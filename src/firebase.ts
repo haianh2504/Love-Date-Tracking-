@@ -1,56 +1,111 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// ==========================================
+// 1. IMPORTS
+// ==========================================
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  doc, 
+  DocumentReference,
+  Timestamp, 
+  QueryDocumentSnapshot, 
+  SnapshotOptions, 
+  DocumentData, 
+  WithFieldValue, 
+  FirestoreDataConverter 
+} from 'firebase/firestore';
+import type { CoupleProfile } from './types';
 
-const env = import.meta.env;
-const requiredFirebaseEnv = [
-  "VITE_FIREBASE_API_KEY",
-  "VITE_FIREBASE_AUTH_DOMAIN",
-  "VITE_FIREBASE_PROJECT_ID",
-  "VITE_FIREBASE_STORAGE_BUCKET",
-  "VITE_FIREBASE_MESSAGING_SENDER_ID",
-  "VITE_FIREBASE_APP_ID",
-] as const;
-
-const missingFirebaseEnv = requiredFirebaseEnv.filter((key) => !env[key]);
-
-if (missingFirebaseEnv.length > 0) {
-  throw new Error(
-    `Missing required Firebase env vars: ${missingFirebaseEnv.join(", ")}`
-  );
-}
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// ==========================================
+// 2. FIREBASE CONFIGURATION & INIT
+// ==========================================
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY,
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: env.VITE_FIREBASE_APP_ID,
-  measurementId: env.VITE_FIREBASE_MEASUREMENT_ID || undefined,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// Khởi tạo App và Database
 export const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
 
-// Only initialize Analytics in a browser-like environment.
-// This avoids errors in SSR or build-time tooling that may not have `window`.
-export const analytics =
-  typeof window !== "undefined" && typeof navigator !== "undefined"
-    ? getAnalytics(app)
-    : undefined;
-
-// Lazily initialize Firebase Authentication only in browser runtime
-export const getFirebaseAuth = () => {
-  if (typeof window === "undefined") {
-    throw new Error("Firebase Auth can only be initialized in the browser.");
-  }
-  return getAuth(app);
+// ==========================================
+// 3. HELPERS
+// ==========================================
+// Type guard: Kiểm tra đối tượng Timestamp của Firestore an toàn
+const isTimestamp = (val: unknown): val is Timestamp => {
+  return typeof val === 'object' && val !== null && 'toDate' in val;
 };
 
-export const googleProvider = new GoogleAuthProvider();
+// ==========================================
+// 4. DATA ACCESS LAYER (CONVERTER)
+// ==========================================
+export const profileConverter: FirestoreDataConverter<CoupleProfile> = {
+  // --- WRITE ---
+  toFirestore(profile: WithFieldValue<CoupleProfile>): DocumentData {
+    const rawPayload: Partial<CoupleProfile> = {
+      partner1: profile.partner1 as string | undefined,
+      partner2: profile.partner2 as string | undefined,
+      weddingDate: profile.weddingDate as string | undefined,
+      anniversaryTitle: profile.anniversaryTitle as string | undefined,
+      anniversarySubtitle: profile.anniversarySubtitle as string | undefined,
+      quote: profile.quote as string | undefined,
+      letterText: profile.letterText as string | undefined,
+    };
+
+    const cleanDocument: DocumentData = {};
+    Object.entries(rawPayload).forEach(([key, value]) => {
+      if (value !== undefined) {
+        cleanDocument[key] = value;
+      }
+    });
+
+    return cleanDocument;
+  },
+
+  // --- READ ---
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot<DocumentData>,
+    options: SnapshotOptions
+  ): CoupleProfile {
+    const data = snapshot.data(options);
+
+    const parseString = (val: unknown, fallback = ''): string => {
+      return typeof val === 'string' ? val : fallback;
+    };
+
+    const parseDateString = (val: unknown): string => {
+      if (typeof val === 'string') return val;
+      if (val instanceof Date) return val.toISOString().slice(0, 10);
+      if (isTimestamp(val)) return val.toDate().toISOString().slice(0, 10);
+      return '';
+    };
+
+    return {
+      partner1: parseString(data.partner1),
+      partner2: parseString(data.partner2),
+      weddingDate: parseDateString(data.weddingDate),
+      anniversaryTitle: parseString(data.anniversaryTitle),
+      anniversarySubtitle: parseString(data.anniversarySubtitle),
+      quote: parseString(data.quote),
+      letterText: parseString(data.letterText),
+    };
+  }
+};
+
+// ==========================================
+// 5. DOCUMENT REFERENCE FACTORY
+// ==========================================
+const ALLOWED_DOC_ID = /^[a-zA-Z0-9_-]{1,128}$/;
+
+export const getProfileDocRef = (documentId: string): DocumentReference<CoupleProfile> => {
+  if (!ALLOWED_DOC_ID.test(documentId)) {
+    throw new Error('Invalid documentId format');
+  }
+  
+  // Sử dụng trực tiếp biến 'db' đã được export ở phần 2. 
+  // Tránh khai báo lại biến cục bộ gây lỗi.
+  return doc(db, 'profiles', documentId).withConverter(profileConverter);
+};

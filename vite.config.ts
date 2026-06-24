@@ -22,7 +22,11 @@ export default defineConfig(() => {
     // BỔ SUNG PHẦN TỐI ƯU HÓA XÂY DỰNG (BUILD OPTIMIZATION)
     build: {
       // Tăng nhẹ ngưỡng cảnh báo để tránh báo lỗi chữ vàng với các file hợp lệ
-      chunkSizeWarningLimit: 800, 
+      chunkSizeWarningLimit: 800,
+      // Loại bỏ tất cả `console.*` và `debugger` khi build để giảm log lộ ra production
+      esbuild: {
+        drop: ['console', 'debugger']
+      },
       rollupOptions: {
         output: {
           manualChunks(id) {

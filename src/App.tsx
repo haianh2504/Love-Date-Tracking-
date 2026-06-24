@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Menu, X, ArrowUp } from 'lucide-react';
 import { CoupleProfile } from './types';
 import { INITIAL_PROFILE } from './data/memories';
 
-// Các thành phần cấu phần đã mô-đun hóa
-import Hero from './components/Hero';
-import DaysTogetherCounter from './components/DaysTogetherCounter';
-import Gallery from './components/Gallery';
-import MyThoughtsForYou from './components/MyThoughtsForYou';
-import Footer from './components/Footer';
+// Các thành phần lớn được lazy-load để giảm initial bundle
+const Hero = lazy(() => import('./components/Hero'));
+const DaysTogetherCounter = lazy(() => import('./components/DaysTogetherCounter'));
+const Gallery = lazy(() => import('./components/Gallery'));
+const MyThoughtsForYou = lazy(() => import('./components/MyThoughtsForYou'));
+const Footer = lazy(() => import('./components/Footer'));
 
 // Import Firebase Authentication functions
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirebaseAuth, googleProvider } from "./firebase";
 
 const ALLOWED_EMAILS = [
@@ -80,6 +80,50 @@ export default function App() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Đọc trạng thái đăng nhập lưu trong localStorage khi mount (nếu có)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem('isLoggedIn');
+    if (stored === 'true') {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Auth state listener (lazy-load auth only in browser)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let unsubscribe: (() => void) | undefined;
+    try {
+      const auth = getFirebaseAuth();
+      unsubscribe = onAuthStateChanged(auth, (user) => {
+        const email = user?.email?.toLowerCase();
+        if (user && email && ALLOWED_EMAILS.includes(email)) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      });
+    } catch (err) {
+      // Auth not available in this environment yet — ignore
+      // console.debug('Auth init skipped:', err);
+    }
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  // Đồng bộ isLoggedIn vào localStorage để duy trì phiên giữa các reload
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('isLoggedIn', isLoggedIn ? 'true' : 'false');
+    } catch (e) {
+      // Ignore storage errors (e.g., private mode)
+    }
+  }, [isLoggedIn]);
 
   const handleUpdateProfile = (newProfile: CoupleProfile) => {
     setProfile(newProfile);
@@ -230,19 +274,22 @@ export default function App() {
 
       {/* Các phần cấu trúc chính */}
       <main>
-        
-        {/* 1. Phần mở màn đại diện Hero */}
-        <Hero profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
+        <Suspense fallback={<div className="py-24 text-center">Đang tải nội dung...</div>}>
+          {/* 1. Phần mở màn đại diện Hero */}
+          <Hero profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
 
-        {/* 2. Phần tự động đếm ngày bên nhau */}
-        <DaysTogetherCounter startDateStr={profile.weddingDate} />
+          {/* 2. Phần tự động đếm ngày bên nhau */}
+          <DaysTogetherCounter startDateStr={profile.weddingDate} />
 
-        {/* 3. Cuốn lưu bút hình ảnh kỷ niệm */}
-        <Gallery isLoggedIn={isLoggedIn} />
+          {/* 3. Cuốn lưu bút hình ảnh kỷ niệm */}
+          <Gallery isLoggedIn={isLoggedIn} />
 
-        {/* 4. Lá thư gửi thương yêu riêng tư đầy xúc cảm */}
-        <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
+          {/* 4. Lá thư gửi thương yêu riêng tư đầy xúc cảm */}
+          <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
 
+          {/* 5. Đoạn kết */}
+          <Footer profile={profile} />
+        </Suspense>
       </main>
 
       {/* 5. Đoạn kết ấm áp cuối trang */}
