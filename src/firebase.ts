@@ -2,6 +2,8 @@
 // 1. IMPORTS
 // ==========================================
 import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { GoogleAuthProvider } from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
@@ -16,7 +18,7 @@ import {
 import type { CoupleProfile } from './types';
 
 // ==========================================
-// 2. FIREBASE CONFIGURATION & INIT
+// 2A. FIREBASE CONFIGURATION & INIT
 // ==========================================
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -30,6 +32,12 @@ const firebaseConfig = {
 // Khởi tạo App và Database
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+
+// ==========================================
+// 2B. FIREBASE AUTHENTICATION
+// ==========================================
+export const getFirebaseAuth = () => getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
 
 // ==========================================
 // 3. HELPERS

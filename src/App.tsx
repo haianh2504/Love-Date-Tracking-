@@ -6,8 +6,11 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Menu, X, ArrowUp } from 'lucide-react';
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+
 import { CoupleProfile } from './types';
 import { INITIAL_PROFILE } from './data/memories';
+import { getFirebaseAuth, googleProvider } from "./firebase";
 
 // Các thành phần lớn được lazy-load để giảm initial bundle
 const Hero = lazy(() => import('./components/Hero'));
@@ -16,17 +19,12 @@ const Gallery = lazy(() => import('./components/Gallery'));
 const MyThoughtsForYou = lazy(() => import('./components/MyThoughtsForYou'));
 const Footer = lazy(() => import('./components/Footer'));
 
-// Import Firebase Authentication functions
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirebaseAuth, googleProvider } from "./firebase";
-
 const ALLOWED_EMAILS = [
   "haianh2504077@gmail.com",
   "vungocanhthu1192009@gmail.com" 
 ];
 
 
-// ranh giới
 export default function App() {
   const [profile, setProfile] = useState<CoupleProfile>(INITIAL_PROFILE);
   const [loading, setLoading] = useState(true);
@@ -263,7 +261,7 @@ export default function App() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-[60px] z-39 glass-panel shadow-lg border-b border-brand-pastel/30 p-6 flex flex-col gap-4 text-center md:hidden"
+            className="fixed inset-x-0 top-15 z-39 glass-panel shadow-lg border-b border-brand-pastel/30 p-6 flex flex-col gap-4 text-center md:hidden"
           >
             <button onClick={() => scrollToSection('countdown')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Ngày bên nhau</button>
             <button onClick={() => scrollToSection('gallery')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Bộ sưu tập kỷ niệm</button>
