@@ -11,6 +11,8 @@ import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { CoupleProfile } from './types';
 import { INITIAL_PROFILE } from './data/memories';
 import { getFirebaseAuth, googleProvider } from "./firebase";
+import { useFirestore } from './hooks/useFirestore';
+import { toastSuccess, toastError, toastInfo } from './utils/toast';
 
 // Các thành phần lớn được lazy-load để giảm initial bundle
 const Hero = lazy(() => import('./components/Hero'));
@@ -24,6 +26,8 @@ const ALLOWED_EMAILS = [
   "vungocanhthu1192009@gmail.com" 
 ];
 
+// Use fixed document ID for couple profile storage
+const COUPLE_PROFILE_DOC_ID = 'couple_profile';
 
 export default function App() {
   const [profile, setProfile] = useState<CoupleProfile>(INITIAL_PROFILE);
@@ -32,6 +36,10 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSavingToFirestore, setIsSavingToFirestore] = useState(false);
+
+  // Initialize Firestore hooks
+  const { getProfile: getProfileFromFirestore, saveProfile: saveProfileToFirestore } = useFirestore();
 
   // Khôi phục hồ sơ lưu niệm từ localStorage
   useEffect(() => {
@@ -95,10 +103,22 @@ export default function App() {
     let unsubscribe: (() => void) | undefined;
     try {
       const auth = getFirebaseAuth();
-      unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
         const email = user?.email?.toLowerCase();
         if (user && email && ALLOWED_EMAILS.includes(email)) {
           setIsLoggedIn(true);
+          // Load profile from Firestore when user logs in
+          try {
+            const result = await getProfileFromFirestore(COUPLE_PROFILE_DOC_ID);
+            if (result.success && result.data) {
+              setProfile(result.data);
+              localStorage.setItem('wedding_anniversary_profile', JSON.stringify(result.data));
+              toastInfo('✨ Đã tải dữ liệu từ Firestore');
+            }
+          } catch (err) {
+            console.error('Error loading from Firestore:', err);
+            // Fallback to localStorage if Firestore fails
+          }
         } else {
           setIsLoggedIn(false);
         }
@@ -111,7 +131,7 @@ export default function App() {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, []);
+  }, [getProfileFromFirestore]);
 
   // Đồng bộ isLoggedIn vào localStorage để duy trì phiên giữa các reload
   useEffect(() => {
@@ -123,9 +143,29 @@ export default function App() {
     }
   }, [isLoggedIn]);
 
-  const handleUpdateProfile = (newProfile: CoupleProfile) => {
+  const handleUpdateProfile = async (newProfile: CoupleProfile) => {
     setProfile(newProfile);
     localStorage.setItem('wedding_anniversary_profile', JSON.stringify(newProfile));
+
+    // If logged in, also save to Firestore
+    if (isLoggedIn) {
+      setIsSavingToFirestore(true);
+      try {
+        const result = await saveProfileToFirestore(COUPLE_PROFILE_DOC_ID, newProfile);
+        if (result.success) {
+          toastSuccess('💾 Đã lưu dữ liệu thành công!');
+        } else {
+          toastError(`Lỗi: ${result.error || 'Không thể lưu dữ liệu'}`);
+          console.error('Firestore save failed:', result.error);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        toastError(`Lỗi: ${errorMsg}`);
+        console.error('Error saving to Firestore:', err);
+      } finally {
+        setIsSavingToFirestore(false);
+      }
+    }
   };
 
   const getInitials = () => {
@@ -154,7 +194,7 @@ export default function App() {
       // Backend Logic: Kiểm tra phân quyền
       if (userEmail && ALLOWED_EMAILS.includes(userEmail)) {
         console.log("Xác thực thành công. Xin chào:", user.displayName);
-        alert(`Chào mừng ${user.displayName} đã quay trở lại không gian của chúng mình!`);
+        toastSuccess(`Chào mừng ${user.displayName} đã quay trở lại!`);
         // Đánh dấu là đã đăng nhập để hiển thị các nút chỉnh sửa
         setIsLoggedIn(true);
         
@@ -162,13 +202,14 @@ export default function App() {
         // Nếu email không được phép, đăng xuất và thông báo
         await signOut(auth);
         setIsLoggedIn(false);
-        alert("Khu vực riêng tư! Bạn không có quyền truy cập.");
+        toastError("Khu vực riêng tư! Bạn không có quyền truy cập.");
       }
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
         console.log("Tiến trình đăng nhập bị hủy.");
       } else {
         console.error("Lỗi xác thực Firebase:", error);
+        toastError('Lỗi đăng nhập. Vui lòng thử lại.');
       }
     }
   };
@@ -233,13 +274,32 @@ export default function App() {
             <button onClick={() => scrollToSection('thoughts')} className="hover:text-brand-deep cursor-pointer transition-colors">Lời thương gửi em</button>
           </div>
 
-          {/* Nút login */}
-          <button
-            onClick={handleGoogleLogin}
-            className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-white text-amber-900 border border-pink-200 shadow-sm hover:bg-brand-deep hover:text-white hover:border-brand-deep transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
-          >
-            Login
-          </button>
+          {/* Nút login / logout */}
+          {!isLoggedIn ? (
+            <button
+              onClick={handleGoogleLogin}
+              className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-white text-amber-900 border border-pink-200 shadow-sm hover:bg-brand-deep hover:text-white hover:border-brand-deep transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
+            >
+              Login
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                try {
+                  const auth = getFirebaseAuth();
+                  await signOut(auth);
+                  setIsLoggedIn(false);
+                  toastInfo('👋 Đã đăng xuất thành công');
+                } catch (err) {
+                  console.error('Logout error:', err);
+                  toastError('Lỗi đăng xuất. Vui lòng thử lại.');
+                }
+              }}
+              className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-brand-pastel/40 text-brand-deep border border-brand-accent shadow-sm hover:bg-brand-pastel/60 transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
+            >
+              Logout
+            </button>
+          )}
 
           {/* Biểu tượng thực đơn nhỏ cho Mobile */}
           <div className="flex items-center">
@@ -291,7 +351,7 @@ export default function App() {
       </main>
 
       {/* 5. Đoạn kết ấm áp cuối trang */}
-      <Footer profile={profile} />
+      
 
       {/* Nút quay lại đầu trang lơ lửng */}
       <AnimatePresence>
