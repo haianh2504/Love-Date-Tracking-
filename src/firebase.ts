@@ -1,7 +1,8 @@
 // ==========================================
 // 1. IMPORTS
 // ==========================================
-import { initializeApp } from 'firebase/app';
+// Thay dòng import cũ thành dòng này:
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { GoogleAuthProvider } from 'firebase/auth';
 import { 
@@ -30,7 +31,7 @@ const firebaseConfig = {
 };
 
 // Khởi tạo App và Database
-export const app = initializeApp(firebaseConfig);
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app);
 
 // ==========================================
