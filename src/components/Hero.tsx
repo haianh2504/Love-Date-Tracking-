@@ -51,7 +51,7 @@ export default function Hero({ profile, onUpdateProfile, isLoggedIn }: HeroProps
   return (
     <header className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#FFF0F4] via-[#FFF9FA] to-[#FFF0F4] px-4 py-16">
       
-      {/* Các trái tim dạt bay lơ lửng */}
+      {/* Các trái tim dạt bay lơ lửng (Giữ nguyên motion cho hiệu ứng lặp liên tục) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         {hearts.map((h) => (
           <motion.div
@@ -80,70 +80,52 @@ export default function Hero({ profile, onUpdateProfile, isLoggedIn }: HeroProps
       <div className="absolute top-10 left-10 w-48 h-48 rounded-full border border-brand-pastel/30 pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full border border-brand-pastel/30 pointer-events-none" />
       
-      {/* Vùng chứa nội dung Hero */}
+      {/* Vùng chứa nội dung Hero (Áp dụng GSAP) */}
       <div className="relative z-10 max-w-4xl mx-auto text-center">
         
         {/* Ruy băng rực rỡ cách điệu nhịp đập tim */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-          className="flex items-center justify-center gap-2 mb-6 text-brand-accent"
+        <div
+          className="flex items-center justify-center gap-2 mb-6 text-brand-accent gsap-reveal-scale"
         >
           <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-brand-accent" />
           <Heart className="w-5 h-5 fill-brand-pastel animate-pulse" />
           <Heart className="w-6 h-6 fill-brand-accent text-brand-accent pulse-gently" />
           <Heart className="w-5 h-5 fill-brand-pastel animate-pulse" />
           <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-brand-accent" />
-        </motion.div>
+        </div>
 
         {/* Tên hai người yêu nhau hoa mỹ */}
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.2 }}
-          className="font-serif text-5xl md:text-7xl text-brand-dark leading-normal tracking-wide mb-4 select-none font-medium"
+        <h1
+          className="font-serif text-5xl md:text-7xl text-brand-dark leading-normal tracking-wide mb-4 select-none font-medium gsap-reveal-up"
         >
           {profile.partner1} <span className="text-brand-accent font-light italic text-4xl md:text-6xl mx-2">&</span> {profile.partner2}
-        </motion.h1>
+        </h1>
 
         {/* Tiêu đề Chúc Mừng Kỷ Niệm */}
-        <motion.h2
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.4 }}
-          className="font-serif italic text-2xl md:text-4xl text-brand-deep tracking-wide font-light mb-6"
+        <h2
+          className="font-serif italic text-2xl md:text-4xl text-brand-deep tracking-wide font-light mb-6 gsap-reveal-up"
         >
           {profile.anniversaryTitle}
-        </motion.h2>
+        </h2>
 
         {/* Châm ngôn lãng mạn phụ đề */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.4, delay: 0.6 }}
-          className="max-w-xl mx-auto text-sm md:text-base text-gray-600 font-light tracking-wide leading-relaxed italic mb-8 px-4"
+        <p
+          className="max-w-xl mx-auto text-sm md:text-base text-gray-600 font-light tracking-wide leading-relaxed italic mb-8 px-4 gsap-reveal-up"
         >
           &ldquo;{profile.anniversarySubtitle}&rdquo;
-        </motion.p>
+        </p>
 
         {/* Hộp ngày tháng hành trình cưới thiêng liêng */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, delay: 0.8 }}
-          className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white/75 backdrop-blur-md border border-brand-pastel/40 shadow-sm text-xs md:text-sm font-semibold tracking-wider text-brand-dark uppercase"
+        <div
+          className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white/75 backdrop-blur-md border border-brand-pastel/40 shadow-sm text-xs md:text-sm font-semibold tracking-wider text-brand-dark uppercase gsap-reveal-scale"
         >
           <Calendar className="w-4 h-4 text-brand-accent" />
           <span>{getReadableWeddingDate(profile.weddingDate)}</span>
-        </motion.div>
+        </div>
 
         {/* Nút tác vụ tùy biến ở chân Hero */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.8 }}
-          transition={{ delay: 1.6, duration: 1 }}
-          className="mt-12 flex justify-center gap-4"
+        <div
+          className="mt-12 flex justify-center gap-4 gsap-reveal-up"
         >
           {isLoggedIn && (
             <button
@@ -163,11 +145,11 @@ export default function Hero({ profile, onUpdateProfile, isLoggedIn }: HeroProps
             <span>Đếm Ngày Bên Nhau</span>
             <span className="text-xs">↓</span>
           </a>
-        </motion.div>
+        </div>
 
       </div>
 
-      {/* Dialog tùy chính thông tin hồ sơ tình yêu */}
+      {/* Dialog tùy chính thông tin hồ sơ tình yêu (Giữ nguyên AnimatePresence cho modal) */}
       <AnimatePresence>
         {isEditing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-xs">
