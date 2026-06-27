@@ -74,8 +74,6 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
     }
   };
 
-
-
   // Lấy danh sách các danh mục độc nhất
   const rawCategories = Array.from(new Set(photos.map(p => p.category as string))) as string[];
   const categories = ['All', ...rawCategories];
@@ -95,7 +93,7 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
       <div className="max-w-6xl mx-auto">
         
         {/* Tiêu đề góc Album ảnh */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 gsap-reveal-up">
           <span className="font-cursive text-3xl md:text-4xl text-brand-accent block mb-2">Cuốn Album Ấm Áp</span>
           <h2 className="font-serif text-3.5xl md:text-5xl text-brand-dark tracking-wide font-medium">
             Bộ Sưu Tập Kỷ Niệm
@@ -107,7 +105,7 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
         </div>
 
         {/* Thanh công cụ định dạng và bộ lọc danh mục */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10 bg-brand-pastel/15 p-3 rounded-2xl border border-brand-pastel/30">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10 bg-brand-pastel/15 p-3 rounded-2xl border border-brand-pastel/30 gsap-reveal-up">
           
           {/* Nút lọc danh mục */}
           <div className="flex flex-wrap gap-1.5">
@@ -128,6 +126,7 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
 
           {/* Khung chức năng thêm ảnh / khôi phục */}
           <div className="flex items-center gap-3">
+            {/* Chỉ hiện nút Thêm khi đã đăng nhập */}
             {isLoggedIn && (
               <button
                 onClick={() => setIsAdding(true)}
@@ -138,36 +137,29 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
                 <span>Thêm Kỷ Niệm Mới</span>
               </button>
             )}
-
           </div>
 
         </div>
 
-        {/* Cuốn album kỷ niệm được dàn trải dọc tinh tế */}
-        <div className="relative w-full max-w-4xl mx-auto py-4">
-          {/* Một đường chỉ dọc chấm nhỏ tinh xảo kết nối hành trình */}
-          <div className="absolute left-1/2 top-4 bottom-4 -translate-x-1/2 w-[1px] border-l border-dashed border-brand-pastel/40 hidden md:block z-0" />
+        {/* Cuốn album kỷ niệm được dàn trải dọc tinh tế dạng Grid 4 cột trên desktop */}
+        <div className="relative w-full max-w-6xl mx-auto py-4">
           
           <motion.div 
             layout
-            className="flex flex-col gap-10 md:gap-14 relative z-10"
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 relative z-10 gsap-reveal-stagger-container"
           >
             <AnimatePresence mode="popLayout">
               {filteredPhotos.map((photo) => (
                 <motion.div
                   key={photo.id}
                   layout
-                  initial={{ opacity: 0, y: 40, scale: 0.98 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: "-100px" }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-[88%] md:w-[85%] mx-auto group relative cursor-pointer overflow-hidden rounded-2xl md:rounded-3xl bg-white border border-brand-pastel/30 shadow-xs hover:shadow-lg transition-all duration-500"
+                  className="w-full group relative cursor-pointer overflow-hidden rounded-2xl md:rounded-3xl bg-white border border-brand-pastel/30 shadow-xs hover:shadow-lg transition-all duration-500 gsap-reveal-stagger-item"
                   onClick={() => setSelectedPhoto(photo)}
                   title="Nhấp để xem hành trình thời gian"
                 >
-                  {/* Khung cấu trúc ảnh duy trì tỉ lệ hình ảnh dọc chuẩn mực điện ảnh */}
-                  <div className="relative w-full aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-brand-base/20 flex flex-col justify-center">
+                  {/* Khung cấu trúc ảnh duy trì tỉ lệ hình vuông gọn gàng, dễ nhìn */}
+                  <div className="relative w-full aspect-square overflow-hidden bg-brand-base/20 flex flex-col justify-center">
                     <img
                       src={photo.url}
                       alt={photo.description}
@@ -177,39 +169,39 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
                     />
 
                     {/* Thêm một lớp phủ chuyển màu tối thẫm ở chân ảnh giúp chữ tuyệt đối sắc nét, dễ đọc */}
-                    <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/92 via-black/45 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-[50%] bg-gradient-to-t from-black/92 via-black/45 to-transparent pointer-events-none" />
 
                     {/* Icon phóng to thu phóng tinh gọn góc trên bên phải */}
-                    <span className="absolute top-4 right-4 z-20 bg-white/75 backdrop-blur-md p-2 rounded-full text-brand-dark shadow-xs opacity-0 md:group-hover:opacity-100 transition-all duration-300 scale-90 md:group-hover:scale-100 hidden md:inline-flex">
+                    <span className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 bg-white/75 backdrop-blur-md p-1.5 sm:p-2 rounded-full text-brand-dark shadow-xs opacity-0 md:group-hover:opacity-100 transition-all duration-300 scale-90 md:group-hover:scale-100 hidden md:inline-flex">
                       <ZoomIn className="w-4 h-4" />
                     </span>
 
-                    {/* Nút hủy bỏ tấm ảnh kỷ niệm góc trên trái */}
+                    {/* Nút hủy bỏ tấm ảnh kỷ niệm góc trên trái (Chỉ hiển thị khi đã đăng nhập) */}
                     {isLoggedIn && (
                       <button
                         onClick={(e) => handleDeletePhoto(photo.id, e)}
-                        className="absolute top-4 left-4 z-20 bg-red-5/90 hover:bg-red-500 hover:text-white backdrop-blur-md p-2 rounded-full text-red-500 shadow-xs opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 bg-red-50/90 hover:bg-red-500 hover:text-white backdrop-blur-md p-1.5 sm:p-2 rounded-full text-red-500 shadow-xs opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                         title="Xóa kỷ niệm này"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
 
-                    {/* Thẻ ghi chú nhãn danh mục lửng lơ ẩn trên mobile cho đỡ rối */}
-                    <div className="absolute top-4 right-14 z-20 px-2.5 py-0.5 bg-brand-base/85 backdrop-blur-md text-[9px] font-bold text-brand-deep uppercase tracking-widest rounded-md border border-brand-pastel/50 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
+                    {/* Thẻ ghi chú nhãn danh mục lửng lơ */}
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 px-2.5 py-0.5 bg-brand-base/85 backdrop-blur-md text-[8px] sm:text-[9px] font-bold text-brand-deep uppercase tracking-widest rounded-md border border-brand-pastel/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                       {photo.category}
                     </div>
 
-                    {/* Nội dung ký hiệu câu văn lãng mạn lơ lửng góc trái bên dưới (bảo đảm không chiếm quá 25-30% chiều cao trên mobile) */}
-                    <div className="absolute bottom-0 inset-x-0 p-4 md:p-8 flex flex-col justify-end text-left text-white select-none pointer-events-none max-h-[30%] md:max-h-[35%] bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-3.5 md:pb-8">
+                    {/* Nội dung ký hiệu câu văn lãng mạn lơ lửng góc trái bên dưới */}
+                    <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 md:p-5 flex flex-col justify-end text-left text-white select-none pointer-events-none max-h-[45%] bg-gradient-to-t from-black/95 via-black/40 to-transparent pb-3 sm:pb-4 md:pb-5">
                       {/* Tiêu đề Chữ Tình / Lời tâm tư đầy cảm xúc */}
-                      <h4 className="font-serif italic text-xs sm:text-sm md:text-lg lg:text-xl font-light text-white leading-normal md:leading-relaxed drop-shadow-sm mb-1 md:mb-2.5 max-w-[95%] transition-colors duration-300 group-hover:text-brand-pastel line-clamp-1 md:line-clamp-2">
+                      <h4 className="font-serif italic text-[11px] sm:text-xs md:text-sm lg:text-[15px] font-light text-white leading-snug drop-shadow-sm mb-1 sm:mb-1.5 max-w-[95%] transition-colors duration-300 group-hover:text-brand-pastel line-clamp-2">
                         &ldquo;{photo.description}&rdquo;
                       </h4>
 
                       {/* Địa điểm và Thời gian / Ngày kỷ niệm */}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[8px] sm:text-[9px] md:text-xs text-white/85 font-mono tracking-wide font-light">
-                        <span className="flex items-center gap-1 font-medium bg-white/10 px-1.5 py-0.5 rounded-sm md:rounded-md backdrop-blur-xs">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[8px] sm:text-[9px] md:text-xs text-white/85 font-mono tracking-wide font-light">
+                        <span className="flex items-center gap-1 font-medium bg-white/15 px-1.5 py-0.5 rounded-sm md:rounded-md backdrop-blur-xs">
                           {photo.location}
                         </span>
                         {photo.location && photo.date && <span className="opacity-60">•</span>}
@@ -229,7 +221,9 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
           <div className="text-center py-16 bg-brand-pastel/10 rounded-3xl border border-dashed border-brand-pastel/80">
             <Camera className="w-12 h-12 text-brand-pastel mx-auto mb-3" />
             <p className="text-gray-500 font-serif">Chưa có bức ảnh kỷ niệm nào trong danh mục này.</p>
-            <p className="text-xs text-gray-400 mt-1">Hãy nhấp vào &ldquo;Thêm Kỷ Niệm Mới&rdquo; ở trên để đăng tải bức ảnh đầu tiên!</p>
+            {isLoggedIn && (
+              <p className="text-xs text-gray-400 mt-1">Hãy nhấp vào &ldquo;Thêm Kỷ Niệm Mới&rdquo; ở trên để đăng tải bức ảnh đầu tiên!</p>
+            )}
           </div>
         )}
 

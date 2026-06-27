@@ -2,17 +2,23 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'; // Trỏ thẳng vào thư mục dist
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Menu, X, ArrowUp } from 'lucide-react';
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+
 
 import { CoupleProfile } from './types';
 import { INITIAL_PROFILE } from './data/memories';
 import { getFirebaseAuth, googleProvider } from "./firebase";
 import { useFirestore } from './hooks/useFirestore';
 import { toastSuccess, toastError, toastInfo } from './utils/toast';
+
+
+// GSAP
+gsap.registerPlugin(ScrollTrigger);
 
 // Các thành phần lớn được lazy-load để giảm initial bundle
 const Hero = lazy(() => import('./components/Hero'));
@@ -40,6 +46,113 @@ export default function App() {
 
   // Initialize Firestore hooks
   const { getProfile: getProfileFromFirestore, saveProfile: saveProfileToFirestore } = useFirestore();
+
+  // Hiệu ứng GSAP lướt tới mới hiện (Scroll-Reveal) cho toàn bộ trang web
+  useEffect(() => {
+    if (loading) return;
+
+    const timer = setTimeout(() => {
+      // 1. Reveal các phần tử có lớp 'gsap-reveal-up'
+      const revealsUp = document.querySelectorAll('.gsap-reveal-up');
+      revealsUp.forEach((el) => {
+        gsap.fromTo(el,
+          { 
+            opacity: 0, 
+            y: 45 
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.0,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 92%',
+              end: 'bottom 8%',
+              toggleActions: 'play reverse play reverse',
+            }
+          }
+        );
+      });
+
+      // 2. Reveal các phần tử có lớp 'gsap-reveal-scale'
+      const revealsScale = document.querySelectorAll('.gsap-reveal-scale');
+      revealsScale.forEach((el) => {
+        gsap.fromTo(el,
+          { 
+            opacity: 0, 
+            scale: 0.94 
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 1.1,
+            ease: 'back.out(1.1)',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 92%',
+              end: 'bottom 8%',
+              toggleActions: 'play reverse play reverse',
+            }
+          }
+        );
+      });
+
+      // 3. Reveal dạng stagger cho các cụm phần tử con (như hàng thẻ, danh sách)
+      const revealsStagger = document.querySelectorAll('.gsap-reveal-stagger-container');
+      revealsStagger.forEach((container) => {
+        const children = container.querySelectorAll('.gsap-reveal-stagger-item');
+        if (children.length > 0) {
+          gsap.fromTo(children,
+            { 
+              opacity: 0, 
+              y: 25 
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              stagger: 0.12,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: container,
+                start: 'top 92%',
+                end: 'bottom 8%',
+                toggleActions: 'play reverse play reverse',
+              }
+            }
+          );
+        }
+      });
+
+      // Refresh ScrollTrigger to calculate offsets correctly after DOM is fully painted
+      ScrollTrigger.refresh();
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 80) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+
+      if (window.scrollY > 500) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Khôi phục hồ sơ lưu niệm từ localStorage
   useEffect(() => {
@@ -182,6 +295,7 @@ export default function App() {
     setShowMobileMenu(false);
   };
 
+
   // xử lý đăng nhập Google với Firebase Authentication
   const handleGoogleLogin = async () => {
     try {
@@ -214,161 +328,158 @@ export default function App() {
     }
   };
   return (
-    <div className="min-h-screen bg-brand-base text-brand-dark overflow-hidden relative">
+    <div className="min-h-screen bg-brand-base text-brand-dark overflow-x-hidden relative">
 
-      {/* Màn hình Pre-loader Intro đầy lãng mạn */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="fixed inset-0 z-50 bg-[#FEF3F6] flex flex-col justify-center items-center"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.15, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-brand-accent mb-4 cursor-pointer"
-            >
-              <Heart className="w-16 h-16 fill-brand-accent drop-shadow-md" />
-            </motion.div>
-            
-            <h2 className="font-cursive text-4xl text-brand-dark mb-1 select-none">
-              Viết nên câu chuyện tình...
-            </h2>
-            <p className="text-xs text-gray-400 font-light tracking-widest uppercase">
-              {profile.partner1} &amp; {profile.partner2}
-            </p>
+  {/* Màn hình Pre-loader Intro đầy lãng mạn */}
+  <AnimatePresence>
+    {loading && (
+      <motion.div
+        initial={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.8 }}
+        className="fixed inset-0 z-50 bg-[#FEF3F6] flex flex-col justify-center items-center"
+      >
+        <motion.div
+          animate={{ 
+            scale: [1, 1.15, 1],
+            rotate: [0, 5, -5, 0]
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          className="text-brand-accent mb-4 cursor-pointer"
+        >
+          <Heart className="w-16 h-16 fill-brand-accent drop-shadow-md" />
+        </motion.div>
+        
+        <h2 className="font-cursive text-4xl text-brand-dark mb-1 select-none">
+          Viết nên câu chuyện tình...
+        </h2>
+        <p className="text-xs text-gray-400 font-light tracking-widest uppercase">
+          {profile.partner1} &amp; {profile.partner2}
+        </p>
 
-            <div className="mt-8 flex gap-1 items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-100" />
-              <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-200" />
-              <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-150" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Thanh công cụ định vị dán mờ thủy tinh */}
-      <nav className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
-        scrolled ? 'bg-white/85 backdrop-blur-md py-3 shadow-xs border-b border-brand-pastel/30' : 'bg-transparent py-5'
-      }`}>
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          
-          {/* Logo / Chữ viết tắt */}
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2 font-cursive text-2xl md:text-3xl text-brand-dark tracking-wide font-medium hover:text-brand-deep transition-colors select-none cursor-pointer"
-          >
-            <Heart className="w-5 h-5 text-brand-accent fill-brand-accent animate-pulse" />
-            <span>{getInitials()}</span>
-          </button>
-
-          {/* Các nút liên kết điều hướng trên Desktop */}
-          <div className="hidden md:flex items-center gap-7 text-xs font-semibold tracking-wider uppercase text-gray-500">
-            <button onClick={() => scrollToSection('countdown')} className="hover:text-brand-deep cursor-pointer transition-colors">Ngày bên nhau</button>
-            <button onClick={() => scrollToSection('gallery')} className="hover:text-brand-deep cursor-pointer transition-colors">Bộ sưu tập kỷ niệm</button>
-            <button onClick={() => scrollToSection('thoughts')} className="hover:text-brand-deep cursor-pointer transition-colors">Lời thương gửi em</button>
-          </div>
-
-          {/* Nút login / logout */}
-          {!isLoggedIn ? (
-            <button
-              onClick={handleGoogleLogin}
-              className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-white text-amber-900 border border-pink-200 shadow-sm hover:bg-brand-deep hover:text-white hover:border-brand-deep transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
-            >
-              Login
-            </button>
-          ) : (
-            <button
-              onClick={async () => {
-                try {
-                  const auth = getFirebaseAuth();
-                  await signOut(auth);
-                  setIsLoggedIn(false);
-                  toastInfo('👋 Đã đăng xuất thành công');
-                } catch (err) {
-                  console.error('Logout error:', err);
-                  toastError('Lỗi đăng xuất. Vui lòng thử lại.');
-                }
-              }}
-              className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-brand-pastel/40 text-brand-deep border border-brand-accent shadow-sm hover:bg-brand-pastel/60 transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest"
-            >
-              Logout
-            </button>
-          )}
-
-          {/* Biểu tượng thực đơn nhỏ cho Mobile */}
-          <div className="flex items-center">
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2 rounded-full hover:bg-brand-pastel/30 text-brand-dark transition-all cursor-pointer"
-            >
-              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
+        <div className="mt-8 flex gap-1 items-center justify-center">
+          <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-100" />
+          <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-200" />
+          <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce delay-150" />
         </div>
-      </nav>
+      </motion.div>
+    )}
+  </AnimatePresence>
 
-      {/* Thực đơn di động ngăn ké mờ */}
-      <AnimatePresence>
-        {showMobileMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-15 z-39 glass-panel shadow-lg border-b border-brand-pastel/30 p-6 flex flex-col gap-4 text-center md:hidden"
-          >
-            <button onClick={() => scrollToSection('countdown')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Ngày bên nhau</button>
-            <button onClick={() => scrollToSection('gallery')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Bộ sưu tập kỷ niệm</button>
-            <button onClick={() => scrollToSection('thoughts')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Lời thương gửi em</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Các phần cấu trúc chính */}
-      <main>
-        <Suspense fallback={<div className="py-24 text-center">Đang tải nội dung...</div>}>
-          {/* 1. Phần mở màn đại diện Hero */}
-          <Hero profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
-
-          {/* 2. Phần tự động đếm ngày bên nhau */}
-          <DaysTogetherCounter startDateStr={profile.weddingDate} />
-
-          {/* 3. Cuốn lưu bút hình ảnh kỷ niệm */}
-          <Gallery isLoggedIn={isLoggedIn} />
-
-          {/* 4. Lá thư gửi thương yêu riêng tư đầy xúc cảm */}
-          <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
-
-          {/* 5. Đoạn kết */}
-          <Footer profile={profile} />
-        </Suspense>
-      </main>
-
-      {/* 5. Đoạn kết ấm áp cuối trang */}
+  {/* Thanh công cụ định vị dán mờ thủy tinh */}
+  <nav className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
+    scrolled ? 'bg-white/85 backdrop-blur-md py-3 shadow-xs border-b border-brand-pastel/30' : 'bg-transparent py-5'
+  }`}>
+    <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
       
+      {/* Logo / Chữ viết tắt */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="flex items-center gap-2 font-cursive text-2xl md:text-3xl text-brand-dark tracking-wide font-medium hover:text-brand-deep transition-colors select-none cursor-pointer"
+      >
+        <Heart className="w-5 h-5 text-brand-accent fill-brand-accent animate-pulse" />
+        <span>{getInitials()}</span>
+      </button>
 
-      {/* Nút quay lại đầu trang lơ lửng */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-6 right-6 z-45 bg-white p-3 rounded-full shadow-md text-brand-accent hover:text-brand-deep border border-brand-pastel hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            title="Quay lên đầu"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Các nút liên kết điều hướng trên Desktop */}
+      <div className="hidden md:flex items-center gap-7 text-xs font-semibold tracking-wider uppercase text-gray-500">
+        <button onClick={() => scrollToSection('countdown')} className="hover:text-brand-deep cursor-pointer transition-colors">Ngày bên nhau</button>
+        <button onClick={() => scrollToSection('gallery')} className="hover:text-brand-deep cursor-pointer transition-colors">Bộ sưu tập kỷ niệm</button>
+        <button onClick={() => scrollToSection('thoughts')} className="hover:text-brand-deep cursor-pointer transition-colors">Lời thương gửi em</button>
+      </div>
+
+      {/* Nút login / logout kết hợp Auth */}
+      {!isLoggedIn ? (
+        <button
+          onClick={handleGoogleLogin}
+          className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-white text-amber-900 border border-pink-200 shadow-sm hover:bg-brand-deep hover:text-white hover:border-brand-deep transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest cursor-pointer"
+        >
+          Login
+        </button>
+      ) : (
+        <button
+          onClick={async () => {
+            try {
+              const auth = getFirebaseAuth();
+              await signOut(auth);
+              setIsLoggedIn(false);
+              toastInfo('👋 Đã đăng xuất thành công');
+            } catch (err) {
+              console.error('Logout error:', err);
+              toastError('Lỗi đăng xuất. Vui lòng thử lại.');
+            }
+          }}
+          className="inline-flex items-center px-5 py-1 sm:px-6 sm:py-1.5 rounded-full bg-brand-pastel/40 text-brand-deep border border-brand-accent shadow-sm hover:bg-brand-pastel/60 transition-all text-[9px] sm:text-[10px] font-serif font-semibold uppercase tracking-widest cursor-pointer"
+        >
+          Logout
+        </button>
+      )}
+
+      {/* Biểu tượng thực đơn nhỏ cho Mobile */}
+      <div className="flex items-center">
+        <button
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="md:hidden p-2 rounded-full hover:bg-brand-pastel/30 text-brand-dark transition-all cursor-pointer"
+        >
+          {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
 
     </div>
+  </nav>
+
+  {/* Thực đơn di động ngăn ké mờ */}
+  <AnimatePresence>
+    {showMobileMenu && (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="fixed inset-x-0 top-[60px] z-39 glass-panel shadow-lg border-b border-brand-pastel/30 p-6 flex flex-col gap-4 text-center md:hidden"
+      >
+        <button onClick={() => scrollToSection('countdown')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Ngày bên nhau</button>
+        <button onClick={() => scrollToSection('gallery')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Bộ sưu tập kỷ niệm</button>
+        <button onClick={() => scrollToSection('thoughts')} className="py-2 text-sm font-semibold text-gray-600 hover:text-brand-deep hover:bg-brand-pastel/10 rounded-xl transition-all cursor-pointer">Lời thương gửi em</button>
+      </motion.div>
+    )}
+  </AnimatePresence>
+
+  {/* Các phần cấu trúc chính */}
+  <main>
+    <Suspense fallback={<div className="py-24 text-center">Đang tải nội dung...</div>}>
+      {/* 1. Phần mở màn đại diện Hero */}
+      <Hero profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
+
+      {/* 2. Phần tự động đếm ngày bên nhau */}
+      <DaysTogetherCounter startDateStr={profile.weddingDate} />
+
+      {/* 3. Cuốn lưu bút hình ảnh kỷ niệm */}
+      <Gallery isLoggedIn={isLoggedIn} />
+
+      {/* 4. Lá thư gửi thương yêu riêng tư đầy xúc cảm */}
+      <MyThoughtsForYou profile={profile} onUpdateProfile={handleUpdateProfile} isLoggedIn={isLoggedIn} />
+      
+      {/* 5. Đoạn kết ấm áp cuối trang */}
+      <Footer profile={profile} />
+    </Suspense>
+  </main>
+
+  {/* Nút quay lại đầu trang lơ lửng */}
+  <AnimatePresence>
+    {showScrollTop && (
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-6 right-6 z-45 bg-white p-3 rounded-full shadow-md text-brand-accent hover:text-brand-deep border border-brand-pastel hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        title="Quay lên đầu"
+      >
+        <ArrowUp className="w-5 h-5" />
+      </motion.button>
+    )}
+  </AnimatePresence>
+
+</div>
   );
 }

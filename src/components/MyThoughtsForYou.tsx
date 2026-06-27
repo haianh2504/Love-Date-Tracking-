@@ -56,7 +56,7 @@ Quang Huy`;
       <div className="max-w-3xl mx-auto relative z-10">
         
         {/* Caption Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 gsap-reveal-up">
           <span className="font-cursive text-3xl md:text-4xl text-brand-accent block mb-2">Lời Thương Sâu Kín</span>
           <h2 className="font-serif text-3.5xl md:text-5xl text-brand-dark tracking-wide font-medium">
             Lời Muốn Nói Với Em
@@ -65,12 +65,8 @@ Quang Huy`;
         </div>
 
         {/* Khung bức thư tinh tế với hiệu ứng kính mờ và chuyển động nhẹ */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1 }}
-          className="relative bg-white/75 backdrop-blur-md border border-brand-pastel/40 p-8 md:p-14 rounded-3xl shadow-sm tracking-wide leading-relaxed italic"
+        <div
+          className="relative bg-white/75 backdrop-blur-md border border-brand-pastel/40 p-8 md:p-14 rounded-3xl shadow-sm tracking-wide leading-relaxed italic gsap-reveal-scale"
         >
           {/* Con dấu sáp niêm phong bằng biểu tượng trái tim dễ thương */}
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -145,7 +141,7 @@ Quang Huy`;
 
           </div>
 
-        </motion.div>
+        </div>
 
       </div>
 

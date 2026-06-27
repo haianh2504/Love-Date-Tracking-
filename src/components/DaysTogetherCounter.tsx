@@ -104,44 +104,28 @@ export default function DaysTogetherCounter({ startDateStr }: DaysTogetherCounte
 
       <div className="max-w-4xl mx-auto text-center relative z-10">
         
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-pastel/30 border border-brand-pastel/50 text-brand-dark text-xs font-semibold tracking-widest uppercase mb-4"
+        <div 
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-pastel/30 border border-brand-pastel/50 text-brand-dark text-xs font-semibold tracking-widest uppercase mb-4 gsap-reveal-up"
         >
           <Heart className="w-3.5 h-3.5 text-brand-deep fill-brand-deep animate-pulse" />
           <span>Hành Trình Yêu Thương Qua Những Con Số</span>
-        </motion.div>
+        </div>
 
-        <motion.h3 
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1 }}
-          className="font-serif text-3xl md:text-5xl text-brand-dark mb-4 tracking-wide font-medium"
+        <h3 
+          className="font-serif text-3xl md:text-5xl text-brand-dark mb-4 tracking-wide font-medium gsap-reveal-up"
         >
           Ngày Bên Nhau
-        </motion.h3>
+        </h3>
         
-        <motion.p 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 0.8 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="text-gray-500 font-light text-sm max-w-lg mx-auto mb-16"
+        <p 
+          className="text-gray-500 font-light text-sm max-w-lg mx-auto mb-16 gsap-reveal-up"
         >
           Ghi dấu từng khoảnh khắc tuyệt vời của nụ cười, cột mốc hạnh phúc và những ước mơ mà chúng ta đã nắm chặt tay nhau vượt qua.
-        </motion.p>
+        </p>
 
         {/* Khung đếm số ngày cực đại đầy cảm xúc */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 50, delay: 0.3 }}
-          className="mb-14 relative inline-block"
+        <div
+          className="mb-14 relative inline-block gsap-reveal-scale"
         >
           <div className="absolute inset-0 bg-brand-pastel/20 rounded-3xl blur-xl scale-95" />
           <div className="relative bg-white/70 backdrop-blur-md px-10 py-8 rounded-3xl border border-brand-pastel/50 shadow-md">
@@ -149,22 +133,17 @@ export default function DaysTogetherCounter({ startDateStr }: DaysTogetherCounte
               {formatNum(animatedDays)} Ngày
             </h4>
             <span className="font-serif italic text-lg md:text-2xl text-brand-dark block font-light">
-              Bên Nhau &amp; Tiếp Tục Đồng Hành ❤️
+              Bên Nhau &amp; Tiếp Tục Đồng Hành 
             </span>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Lưới các thẻ Widget bộ đếm tối giản gồm 2 Thẻ: Tổng Số Ngày và Ngày Hiện Tại */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-2xl mx-auto">
+        {/* Lưới các thẻ Widget bé mỏng tinh giản gồm 2 Thẻ: Tổng Số Ngày và Ngày Hiện Tại */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-2xl mx-auto gsap-reveal-stagger-container">
           
           {/* Thẻ đếm Ngày */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            whileHover={{ y: -4 }}
-            className="bg-white/80 backdrop-blur-xs p-6 md:p-8 rounded-2xl relative border border-brand-pastel/30 shadow-xs group transition-all duration-300"
+          <div
+            className="bg-white/80 backdrop-blur-xs p-6 md:p-8 rounded-2xl relative border border-brand-pastel/30 shadow-xs group hover:-translate-y-1 hover:shadow-md transition-all duration-300 gsap-reveal-stagger-item"
           >
             <div className="absolute top-0 inset-x-0 h-1.5 rounded-t-2xl bg-gradient-to-r from-brand-accent to-brand-deep opacity-80" />
             <div className="flex justify-center mb-3 text-brand-accent">
@@ -174,16 +153,11 @@ export default function DaysTogetherCounter({ startDateStr }: DaysTogetherCounte
               {formatNum(animatedDays)}
             </div>
             <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-3">Tổng số ngày</div>
-          </motion.div>
+          </div>
 
           {/* Thẻ tổng ngày - tháng - năm */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            whileHover={{ y: -4 }}
-            className="bg-white/80 backdrop-blur-xs p-6 md:p-8 rounded-2xl relative border border-brand-pastel/30 shadow-xs group transition-all duration-300"
+          <div
+            className="bg-white/80 backdrop-blur-xs p-6 md:p-8 rounded-2xl relative border border-brand-pastel/30 shadow-xs group hover:-translate-y-1 hover:shadow-md transition-all duration-300 gsap-reveal-stagger-item"
           >
             <div className="absolute top-0 inset-x-0 h-1.5 rounded-t-2xl bg-gradient-to-r from-brand-accent to-brand-deep opacity-80" />
             <div className="flex justify-center mb-3 text-brand-accent">
@@ -197,7 +171,7 @@ export default function DaysTogetherCounter({ startDateStr }: DaysTogetherCounte
               <span><span className="font-bold tabular-nums">{animatedDaysDecimal}</span> Ngày</span>
             </div>
             <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-3">Tổng năm - tháng - ngày</div>
-          </motion.div>
+          </div>
 
         </div>
 
