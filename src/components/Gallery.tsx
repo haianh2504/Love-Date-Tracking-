@@ -3,6 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ZoomIn, X, Plus, Trash2, MapPin, Calendar, Camera } from 'lucide-react';
 import { GalleryPhoto } from '../types';
 
+// Import các hàm của Firestore và biến db từ file cấu hình của bạn
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase'; // Thay đổi đường dẫn này nếu file firebase.ts nằm ở thư mục khác
+
 interface GalleryProps {
   isLoggedIn?: boolean;
 }
@@ -20,29 +24,47 @@ export default function Gallery({ isLoggedIn }: GalleryProps) {
   const [newDate, setNewDate] = useState('');
   const [newCategory, setNewCategory] = useState('Ngày Thường');
 
-  // Khôi phục dữ liệu từ localStorage
+  // Khôi phục dữ liệu từ Firestore thay vì localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('wedding_anniversary_gallery');
-    if (saved) {
+    const fetchPhotos = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Kiểm tra và cập nhật cấu trúc nếu cần thiết
-        if (parsed.length > 0 && !('description' in parsed[0])) {
-          setPhotos([]);
+        // Khai báo vị trí tài liệu lưu trữ album (collection: 'couple_data', document: 'gallery')
+        const docRef = doc(db, 'couple_data', 'gallery');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // Kiểm tra và cập nhật cấu trúc nếu cần thiết
+          if (data.photos && data.photos.length > 0 && !('description' in data.photos[0])) {
+            setPhotos([]);
+          } else {
+            setPhotos(data.photos || []);
+          }
         } else {
-          setPhotos(parsed);
+          setPhotos([]);
         }
-      } catch {
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu từ Firestore:", error);
         setPhotos([]);
       }
-    } else {
-      setPhotos([]);
-    }
+    };
+
+    fetchPhotos();
   }, []);
 
-  const savePhotos = (updated: GalleryPhoto[]) => {
+  // Hàm lưu mảng ảnh mới lên Firestore
+  const savePhotos = async (updated: GalleryPhoto[]) => {
+    // Cập nhật giao diện (UI) ngay lập tức để trải nghiệm mượt mà
     setPhotos(updated);
-    localStorage.setItem('wedding_anniversary_gallery', JSON.stringify(updated));
+    
+    // Đẩy dữ liệu lên cơ sở dữ liệu đám mây
+    try {
+      const docRef = doc(db, 'couple_data', 'gallery');
+      await setDoc(docRef, { photos: updated }, { merge: true });
+    } catch (error) {
+      console.error("Lỗi khi lưu ảnh lên Firestore:", error);
+      alert("Đã xảy ra lỗi khi lưu ảnh. Vui lòng kiểm tra kết nối mạng!");
+    }
   };
 
   const handleAddPhoto = (e: React.FormEvent) => {
